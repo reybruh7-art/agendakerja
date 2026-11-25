@@ -52,7 +52,9 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Waktu / Jam</label>
-          <input type="text" id="createWaktu" placeholder="Contoh: 09:00 - 11:00" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500" />
+          <select id="createWaktu" required class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
+            <!-- Diisi otomatis via JavaScript -->
+          </select>
         </div>
 
         <div class="sm:col-span-2">
@@ -159,7 +161,9 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Waktu / Jam</label>
-            <input type="text" id="editWaktu" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+            <select id="editWaktu" required class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm">
+              <!-- Diisi otomatis via JavaScript -->
+            </select>
           </div>
         </div>
 
@@ -226,6 +230,34 @@
       "butanti": { pass: "butantikreasi", unit: "Jadwal Bu Tanti", isSuperAdmin: false }
     };
 
+    // DAFTAR OPSI JAM SERAGAM
+    const TIME_SLOTS = [
+      "07:00 - 08:00",
+      "08:00 - 09:00",
+      "09:00 - 10:00",
+      "10:00 - 11:00",
+      "11:00 - 12:00",
+      "12:00 - 13:00",
+      "13:00 - 14:00",
+      "14:00 - 15:00",
+      "15:00 - 16:00",
+      "16:00 - 17:00",
+      "17:00 - 18:00",
+      "08:00 - 12:00 (Sesi Pagi)",
+      "13:00 - 17:00 (Sesi Siang - Sore)",
+      "08:00 - 17:00 (Full Day)"
+    ];
+
+    // Isi opsi dropdown jam ke form Input & form Edit
+    function populateTimeDropdowns() {
+      const optionsHTML = TIME_SLOTS.map(slot => `<option value="${slot}">${slot}</option>`).join('');
+      document.getElementById('createWaktu').innerHTML = optionsHTML;
+      document.getElementById('editWaktu').innerHTML = optionsHTML;
+      // Default pilihan di form input ke 08:00 - 09:00
+      document.getElementById('createWaktu').value = "08:00 - 09:00";
+    }
+    populateTimeDropdowns();
+
     const UNIT_STYLES = {
       "R&D": {
         card: "border-l-4 border-l-emerald-500 bg-white",
@@ -270,9 +302,18 @@
       document.getElementById('editUnitLabel').textContent = `Unit: ${item.unit}`;
       document.getElementById('editStatus').value = item.status;
       document.getElementById('editTanggal').value = item.tanggal;
-      document.getElementById('editWaktu').value = item.waktu;
+      
+      // Jika ada data lama yang jamnya belum ada di dropdown, tambahkan sementara agar tetap terpilih
+      const editWaktuEl = document.getElementById('editWaktu');
+      if (!TIME_SLOTS.includes(item.waktu)) {
+        const tempOpt = document.createElement('option');
+        tempOpt.value = item.waktu;
+        tempOpt.textContent = item.waktu;
+        editWaktuEl.appendChild(tempOpt);
+      }
+      editWaktuEl.value = item.waktu;
+      
       document.getElementById('editKegiatan').value = item.kegiatan;
-
       document.getElementById('editModal').classList.remove('hidden');
     };
 
@@ -363,7 +404,7 @@
       try {
         await addDoc(collection(db, "agendas"), {
           tanggal: document.getElementById('createTanggal').value,
-          waktu: document.getElementById('createWaktu').value.trim(),
+          waktu: document.getElementById('createWaktu').value,
           unit: document.getElementById('createUnit').value,
           kegiatan: document.getElementById('createKegiatan').value.trim(),
           status: "Pending",
@@ -371,7 +412,6 @@
           createdAt: new Date().toISOString()
         });
 
-        document.getElementById('createWaktu').value = "";
         document.getElementById('createKegiatan').value = "";
       } catch (err) {
         alert("Gagal menambah agenda: " + err.message);
@@ -395,7 +435,7 @@
         await updateDoc(doc(db, "agendas", docId), {
           status: document.getElementById('editStatus').value,
           tanggal: document.getElementById('editTanggal').value,
-          waktu: document.getElementById('editWaktu').value.trim(),
+          waktu: document.getElementById('editWaktu').value,
           kegiatan: document.getElementById('editKegiatan').value.trim(),
           updatedBy: activeSession.username,
           updatedAt: new Date().toISOString()

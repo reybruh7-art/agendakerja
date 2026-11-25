@@ -89,14 +89,20 @@
     </section>
 
     <!-- FILTER & LEGENDA WARNA -->
-    <section class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div class="flex flex-wrap items-center gap-3">
+    <section class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+      <div class="flex flex-wrap items-end gap-3">
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase">Filter Tanggal</label>
-          <input type="date" id="filterTanggal" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium" />
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Tanggal</label>
+          <div class="flex items-center gap-1.5">
+            <input type="date" id="filterTanggal" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium" />
+            <button type="button" id="btnSemuaTanggal" onclick="toggleSemuaTanggal()" class="border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold transition">
+              Semua Tanggal
+            </button>
+          </div>
         </div>
+
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase">Filter Unit & Irisan</label>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Unit & Irisan</label>
           <select id="filterUnit" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
             <option value="ALL">Semua Unit</option>
             <option value="R&D">R&D (Hijau)</option>
@@ -105,8 +111,9 @@
             <option value="Jadwal Bu Tanti">Jadwal Bu Tanti (Merah)</option>
           </select>
         </div>
+
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase">Filter Status</label>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Status</label>
           <select id="filterStatus" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
             <option value="ALL">Semua Status</option>
             <option value="On Progress">On Progress</option>
@@ -132,6 +139,12 @@
         </span>
       </div>
     </section>
+
+    <!-- INFO RINGKASAN FILTER AKTIF -->
+    <div id="filterSummaryBar" class="hidden bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between">
+      <span id="filterSummaryText">Menampilkan semua tanggal</span>
+      <button onclick="resetToToday()" class="underline font-semibold hover:text-amber-950">Kembali ke Hari Ini</button>
+    </div>
 
     <!-- DAFTAR AGENDA -->
     <section id="agendaList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -302,20 +315,96 @@
 
     let activeSession = JSON.parse(localStorage.getItem("agenda_session")) || null;
     let allAgendas = [];
+    let isAllDatesMode = false;
 
     const todayStr = new Date().toLocaleDateString('en-CA');
     document.getElementById('filterTanggal').value = todayStr;
     document.getElementById('createTanggal').value = todayStr;
 
-    // LOGIKA STATUS EFEKTIF:
-    // Jika masih "On Progress" dan sudah melewati jam 17:00 di tanggal agenda (atau tanggal agenda sudah lewat),
-    // otomatis tampil sebagai "Pending".
+    // Format Tanggal Indonesia agar mudah dibaca (contoh: Rab, 25 Nov 2026)
+    function formatTanggalIndo(dateStr) {
+      if (!dateStr) return "-";
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      return dateObj.toLocaleDateString('id-ID', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    }
+
+    // Toggle Mode Semua Tanggal
+    window.toggleSemuaTanggal = () => {
+      isAllDatesMode = !isAllDatesMode;
+      const filterInput = document.getElementById('filterTanggal');
+      const btnSemua = document.getElementById('btnSemuaTanggal');
+      const summaryBar = document.getElementById('filterSummaryBar');
+
+      if (isAllDatesMode) {
+        filterInput.value = "";
+        btnSemua.classList.remove('bg-slate-100', 'text-slate-700', 'border-slate-300');
+        btnSemua.classList.add('bg-slate-900', 'text-white', 'border-slate-900');
+        summaryBar.classList.remove('hidden');
+      } else {
+        filterInput.value = todayStr;
+        btnSemua.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-300');
+        btnSemua.classList.remove('bg-slate-900', 'text-white', 'border-slate-900');
+        summaryBar.classList.add('hidden');
+      }
+      renderAgendas();
+    };
+
+    window.resetToToday = () => {
+      isAllDatesMode = false;
+      const filterInput = document.getElementById('filterTanggal');
+      const btnSemua = document.getElementById('btnSemuaTanggal');
+      const summaryBar = document.getElementById('filterSummaryBar');
+
+      filterInput.value = todayStr;
+      btnSemua.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-300');
+      btnSemua.classList.remove('bg-slate-900', 'text-white', 'border-slate-900');
+      summaryBar.classList.add('hidden');
+      renderAgendas();
+    };
+
+    // Jika user memilih tanggal manual di input date, matikan mode "Semua Tanggal"
+    document.getElementById('filterTanggal').addEventListener('change', (e) => {
+      const btnSemua = document.getElementById('btnSemuaTanggal');
+      const summaryBar = document.getElementById('filterSummaryBar');
+      if (e.target.value) {
+        isAllDatesMode = false;
+        btnSemua.classList.add('bg-slate-100', 'text-slate-700', 'border-slate-300');
+        btnSemua.classList.remove('bg-slate-900', 'text-white', 'border-slate-900');
+        summaryBar.classList.add('hidden');
+      } else {
+        isAllDatesMode = true;
+        btnSemua.classList.remove('bg-slate-100', 'text-slate-700', 'border-slate-300');
+        btnSemua.classList.add('bg-slate-900', 'text-white', 'border-slate-900');
+        summaryBar.classList.remove('hidden');
+      }
+      renderAgendas();
+    });
+
+    // Jika user memilih status "Pending" dan belum aktif Semua Tanggal, tawarkan atau tampilkan info
+    document.getElementById('filterStatus').addEventListener('change', (e) => {
+      if (e.target.value === "Pending" && !isAllDatesMode) {
+        // Otomatis pindah ke Semua Tanggal saat memilih filter status Pending
+        // agar semua agenda Pending lintas tanggal langsung kelihatan
+        toggleSemuaTanggal();
+      } else {
+        renderAgendas();
+      }
+    });
+
+    document.getElementById('filterUnit').addEventListener('change', renderAgendas);
+
     function getEffectiveStatus(item) {
       if (item.status === "Selesai") return "Selesai";
       if (item.status === "Pending") return "Pending";
 
       const now = new Date();
-      const currentDateStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const currentDateStr = now.toLocaleDateString('en-CA');
       const currentHour = now.getHours();
 
       if (item.tanggal < currentDateStr || (item.tanggal === currentDateStr && currentHour >= 17)) {
@@ -324,7 +413,6 @@
       return "On Progress";
     }
 
-    // Render Checkbox Irisan
     function renderIrisanCheckboxes(containerId, ownerUnit, selectedUnits = []) {
       const container = document.getElementById(containerId);
       const otherUnits = ALL_UNITS.filter(u => u !== ownerUnit);
@@ -445,7 +533,6 @@
       updateAuthUI();
     };
 
-    // Simpan Agenda Baru -> Status Awal "On Progress"
     document.getElementById('createAgendaForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!activeSession) return;
@@ -477,7 +564,6 @@
       }
     });
 
-    // Simpan Edit Agenda + Irisan (Hanya Pembuat)
     document.getElementById('editAgendaForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!activeSession) return;
@@ -510,7 +596,6 @@
       }
     });
 
-    // Tombol Cepat Tandai Selesai / Kembalikan
     window.quickMarkSelesai = async (id, currentEffectiveStatus) => {
       const item = allAgendas.find(a => a.id === id);
       if (!activeSession || !item || item.unit !== activeSession.unit) return;
@@ -527,7 +612,6 @@
       }
     };
 
-    // Hapus Agenda (Hanya Pembuat)
     window.deleteAgenda = async (id) => {
       const item = allAgendas.find(a => a.id === id);
       if (!activeSession || !item || item.unit !== activeSession.unit) return;
@@ -546,20 +630,15 @@
       renderAgendas();
     });
 
-    // Cek ulang otomatis setiap 1 menit (misalnya tepat melewati pukul 17:00 saat layar terbuka)
     setInterval(renderAgendas, 60000);
-
-    ['filterTanggal', 'filterUnit', 'filterStatus'].forEach(id => {
-      document.getElementById(id).addEventListener('change', renderAgendas);
-    });
 
     function renderAgendas() {
       const container = document.getElementById('agendaList');
-      const fTanggal = document.getElementById('filterTanggal').value;
+      const fTanggal = isAllDatesMode ? "" : document.getElementById('filterTanggal').value;
       const fUnit = document.getElementById('filterUnit').value;
       const fStatus = document.getElementById('filterStatus').value;
 
-      const filtered = allAgendas.filter(item => {
+      let filtered = allAgendas.filter(item => {
         const effectiveStatus = getEffectiveStatus(item);
         const matchTanggal = !fTanggal || item.tanggal === fTanggal;
         const irisanList = Array.isArray(item.irisan) ? item.irisan : [];
@@ -567,6 +646,16 @@
         const matchStatus = fStatus === "ALL" || effectiveStatus === fStatus;
         return matchTanggal && matchUnit && matchStatus;
       });
+
+      // Jika mode Semua Tanggal aktif, urutkan tanggal terbaru ke terlama lalu berdasarkan jam
+      if (isAllDatesMode) {
+        filtered.sort((a, b) => {
+          if (a.tanggal !== b.tanggal) return b.tanggal.localeCompare(a.tanggal);
+          return (a.waktu || "").localeCompare(b.waktu || "");
+        });
+        document.getElementById('filterSummaryText').textContent =
+          `Menampilkan ${filtered.length} agenda dari semua tanggal` + (fStatus !== "ALL" ? ` (Status: ${fStatus})` : '');
+      }
 
       if (filtered.length === 0) {
         container.innerHTML = `
@@ -627,7 +716,9 @@
                 </div>
                 ${statusBadge}
               </div>
-              <p class="text-xs font-semibold text-slate-500 mb-1">🕒 ${item.waktu} &bull; 📅 ${item.tanggal}</p>
+              <p class="text-xs font-semibold text-slate-500 mb-1.5">
+                📅 <span class="text-slate-700">${formatTanggalIndo(item.tanggal)}</span> &bull; 🕒 ${item.waktu}
+              </p>
               <p class="text-sm sm:text-base font-medium text-slate-800 ${isSelesai ? 'line-through text-slate-400' : ''}">
                 ${escapeHTML(item.kegiatan)}
               </p>

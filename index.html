@@ -4,41 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agenda Kerja Harian - Kreasi Center</title>
-  <link rel="icon" type="image/png" href="logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-slate-100/80 text-slate-800 min-h-screen pb-10">
 
   <!-- NAVBAR -->
-  <nav id="mainNavbar" class="bg-white border-b border-slate-200 sticky top-0 z-30">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+  <nav id="mainNavbar" class="bg-white border-b-2 border-slate-200 sticky top-0 z-30 shadow-2xs">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <!-- LOGO KREASI CENTER (Ganti 'logo.png' jika nama file atau link URL berbeda) -->
-        <img 
-          src="logo.png" 
-          alt="Logo Kreasi Center" 
-          onerror="this.style.display='none'"
-          class="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-lg shrink-0"
-        />
+        <img src="logo.png" alt="Logo Kreasi Center" class="h-10 w-10 object-contain rounded-lg" onerror="this.style.display='none'" />
         <div>
-          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Agenda Kerja Harian</h1>
+          <h1 class="text-base sm:text-xl font-extrabold text-slate-900 leading-tight">Agenda Kerja Harian</h1>
           <p class="text-xs font-medium text-slate-500" id="modeSubtitle">Kreasi Center</p>
         </div>
       </div>
       
       <div class="flex items-center gap-2">
-        <button type="button" onclick="toggleTvMode(true)" class="hidden sm:inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition" title="Tampilan bersih untuk monitor kantor">
+        <button type="button" onclick="toggleTvMode(true)" class="hidden sm:inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition">
           🖥️ Mode Layar TV
         </button>
-        <span id="userBadge" class="hidden text-xs font-semibold px-3 py-1.5 rounded-full"></span>
-        <button id="btnOpenLogin" onclick="toggleLoginModal(true)" class="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+        <span id="userBadge" class="hidden text-xs font-bold px-2.5 py-1 rounded-full"></span>
+        <button id="btnOpenLogin" onclick="toggleLoginModal(true)" class="bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-lg transition">
           Login Akun
         </button>
-        <button id="btnLogout" onclick="handleLogout()" class="hidden bg-rose-100 hover:bg-rose-200 text-rose-700 text-sm font-medium px-4 py-2 rounded-lg transition">
+        <button id="btnLogout" onclick="handleLogout()" class="hidden bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg transition">
           Keluar
         </button>
       </div>
@@ -46,15 +39,10 @@
   </nav>
 
   <!-- HEADER KHUSUS MODE LAYAR TV -->
-  <header id="tvHeader" class="hidden bg-slate-900 text-white px-6 py-4">
+  <header id="tvHeader" class="hidden bg-slate-900 text-white px-6 py-4 border-b-4 border-emerald-500">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <img 
-          src="logo.png" 
-          alt="Logo Kreasi Center" 
-          onerror="this.style.display='none'"
-          class="w-12 h-12 object-contain rounded-xl bg-white p-1 shrink-0"
-        />
+      <div class="flex items-center gap-3.5">
+        <img src="logo.png" alt="Logo Kreasi Center" class="h-11 w-11 object-contain bg-white p-1 rounded-xl" onerror="this.style.display='none'" />
         <div>
           <h1 class="text-2xl font-bold tracking-tight">Papan Agenda Kerja Harian — Kreasi Center</h1>
           <p class="text-sm text-slate-300" id="tvDateSubtitle">Memuat tanggal...</p>
@@ -70,17 +58,18 @@
   </header>
 
   <!-- MAIN CONTAINER -->
-  <main id="mainContainer" class="max-w-6xl mx-auto px-4 py-6 space-y-5">
+  <main id="mainContainer" class="max-w-6xl mx-auto px-4 pt-5 space-y-6">
 
-    <!-- 1. BAGIAN KHUSUS INPUT AGENDA BARU (Hanya Muncul Setelah Login) -->
-    <section id="inputSection" class="hidden bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-      <div class="flex items-center justify-between mb-4">
+    <!-- ========================================================= -->
+    <!-- BAGIAN 1: FORM INPUT AGENDA (Hanya Muncul Setelah Login)  -->
+    <!-- ========================================================= -->
+    <section id="inputSection" class="hidden bg-white p-5 rounded-2xl border-2 border-slate-300 shadow-sm">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200">
         <div>
-          <h2 class="font-bold text-slate-800 text-base">Input Agenda Baru</h2>
-          <p class="text-xs text-slate-500">
-            Status awal otomatis <span class="font-semibold text-sky-600">On Progress</span> (otomatis menjadi <span class="font-semibold text-amber-600">Pending</span> jika lewat jam 17:00 belum selesai)
-          </p>
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Panel Input Unit</span>
+          <h2 class="font-bold text-slate-900 text-base mt-1">Tambah Agenda Kerja Baru</h2>
         </div>
+        <span class="text-[11px] text-slate-500 text-right">Status awal: <strong class="text-sky-600">On Progress</strong></span>
       </div>
 
       <form id="createAgendaForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -101,12 +90,11 @@
           <input type="hidden" id="createUnit" />
         </div>
 
-        <!-- PILIHAN IRISAN UNIT LAIN -->
         <div class="col-span-full bg-slate-50 p-3 rounded-xl border border-slate-200">
           <label class="block text-xs font-semibold text-slate-700 mb-2">
-            Irisan / Kolaborasi dengan Unit Lain <span class="font-normal text-slate-400">(Opsional — centang jika melibatkan unit lain)</span>
+            Irisan / Kolaborasi dengan Unit Lain <span class="font-normal text-slate-400">(Opsional)</span>
           </label>
-          <div id="createIrisanContainer" class="flex flex-wrap gap-3">
+          <div id="createIrisanContainer" class="flex flex-wrap gap-2.5">
           </div>
         </div>
 
@@ -116,76 +104,99 @@
         </div>
 
         <div class="flex items-end">
-          <button type="submit" id="btnCreateSubmit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+          <button type="submit" id="btnCreateSubmit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition shadow-xs">
             + Tambah Agenda
           </button>
         </div>
       </form>
     </section>
 
-    <!-- 2. KARTU RINGKASAN STATISTIK (MINI COUNTER) -->
-    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-semibold text-slate-500 uppercase">Total Agenda</p>
-          <p id="statTotal" class="text-xl font-bold text-slate-900 mt-0.5">0</p>
-        </div>
-        <span class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-base">📋</span>
+    <!-- ========================================================= -->
+    <!-- BAGIAN 2: RINGKASAN STATISTIK (4 KOLOM COMPACT)           -->
+    <!-- ========================================================= -->
+    <div>
+      <div class="flex items-center justify-between mb-2 px-0.5">
+        <h2 class="text-[11px] font-bold uppercase tracking-wider text-slate-500">1. Ringkasan Status</h2>
+        <span id="activeDateLabel" class="text-[11px] font-semibold text-slate-600">Hari Ini</span>
       </div>
 
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-semibold text-sky-600 uppercase">On Progress</p>
-          <p id="statProgress" class="text-xl font-bold text-sky-700 mt-0.5">0</p>
-        </div>
-        <span class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-base">🔄</span>
-      </div>
-
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-semibold text-amber-600 uppercase">Pending</p>
-          <p id="statPending" class="text-xl font-bold text-amber-700 mt-0.5">0</p>
-        </div>
-        <span class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-base">⏳</span>
-      </div>
-
-      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
-        <div>
-          <p class="text-[11px] font-semibold text-emerald-600 uppercase">Selesai</p>
-          <p id="statSelesai" class="text-xl font-bold text-emerald-700 mt-0.5">0</p>
-        </div>
-        <span class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">✓</span>
-      </div>
-    </section>
-
-    <!-- 3. FILTER, SHARE WA, EXPORT SPREADSHEET & LEGENDA WARNA -->
-    <section id="filterSection" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
-      <div class="flex flex-wrap items-end justify-between gap-3">
-        <div class="flex flex-wrap items-end gap-3">
+      <section class="grid grid-cols-4 gap-2 sm:gap-3">
+        <div class="bg-white p-2.5 sm:p-3.5 rounded-xl border border-slate-200/90 shadow-2xs text-center sm:text-left sm:flex sm:items-center sm:justify-between">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Tanggal</label>
-            <div class="flex items-center gap-1.5">
-              <input type="date" id="filterTanggal" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium" />
-              <button type="button" id="btnSemuaTanggal" onclick="toggleSemuaTanggal()" class="border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold transition">
-                Semua Tanggal
-              </button>
-            </div>
+            <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase">Total</p>
+            <p id="statTotal" class="text-lg sm:text-2xl font-extrabold text-slate-900">0</p>
           </div>
+          <span class="hidden sm:flex w-9 h-9 rounded-lg bg-slate-100 text-slate-700 items-center justify-center text-base">📋</span>
+        </div>
 
+        <div class="bg-white p-2.5 sm:p-3.5 rounded-xl border border-sky-200 shadow-2xs text-center sm:text-left sm:flex sm:items-center sm:justify-between">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Unit & Irisan</label>
-            <select id="filterUnit" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
+            <p class="text-[10px] sm:text-[11px] font-bold text-sky-600 uppercase">Proses</p>
+            <p id="statProgress" class="text-lg sm:text-2xl font-extrabold text-sky-700">0</p>
+          </div>
+          <span class="hidden sm:flex w-9 h-9 rounded-lg bg-sky-50 text-sky-600 items-center justify-center text-base">🔄</span>
+        </div>
+
+        <div class="bg-white p-2.5 sm:p-3.5 rounded-xl border border-amber-200 shadow-2xs text-center sm:text-left sm:flex sm:items-center sm:justify-between">
+          <div>
+            <p class="text-[10px] sm:text-[11px] font-bold text-amber-600 uppercase">Pending</p>
+            <p id="statPending" class="text-lg sm:text-2xl font-extrabold text-amber-700">0</p>
+          </div>
+          <span class="hidden sm:flex w-9 h-9 rounded-lg bg-amber-50 text-amber-600 items-center justify-center text-base">⏳</span>
+        </div>
+
+        <div class="bg-white p-2.5 sm:p-3.5 rounded-xl border border-emerald-200 shadow-2xs text-center sm:text-left sm:flex sm:items-center sm:justify-between">
+          <div>
+            <p class="text-[10px] sm:text-[11px] font-bold text-emerald-600 uppercase">Selesai</p>
+            <p id="statSelesai" class="text-lg sm:text-2xl font-extrabold text-emerald-700">0</p>
+          </div>
+          <span class="hidden sm:flex w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 items-center justify-center text-base">✓</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- PEMBATAS ANTAR BAGIAN -->
+    <hr class="border-slate-300/80" />
+
+    <!-- ========================================================= -->
+    <!-- BAGIAN 3: FILTER PENCARIAN & TOMBOL AKSI                  -->
+    <!-- ========================================================= -->
+    <section id="filterSection">
+      <div class="flex items-center justify-between mb-2 px-0.5">
+        <h2 class="text-[11px] font-bold uppercase tracking-wider text-slate-500">2. Filter & Laporan</h2>
+        <button type="button" onclick="toggleTvMode(true)" class="sm:hidden text-[11px] font-semibold text-slate-600 hover:text-slate-900">
+          🖥️ Mode Layar TV
+        </button>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3.5">
+        <!-- Baris Filter Tanggal -->
+        <div>
+          <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal Agenda</label>
+          <div class="flex items-center gap-2">
+            <input type="date" id="filterTanggal" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm font-medium bg-slate-50/50" />
+            <button type="button" id="btnSemuaTanggal" onclick="toggleSemuaTanggal()" class="border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3.5 py-2 text-xs font-semibold transition shrink-0">
+              Semua Tanggal
+            </button>
+          </div>
+        </div>
+
+        <!-- Baris Filter Unit & Status (2 Kolom Sejajar di HP) -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Unit & Irisan</label>
+            <select id="filterUnit" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm font-medium bg-slate-50/50">
               <option value="ALL">Semua Unit</option>
               <option value="R&D">R&D (Hijau)</option>
               <option value="KTC">KTC (Biru)</option>
               <option value="SCD">SCD (Kuning)</option>
-              <option value="Jadwal Bu Tanti">Jadwal Bu Tanti (Merah)</option>
+              <option value="Jadwal Bu Tanti">Bu Tanti (Merah)</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Status</label>
-            <select id="filterStatus" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Status</label>
+            <select id="filterStatus" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 text-xs sm:text-sm font-medium bg-slate-50/50">
               <option value="ALL">Semua Status</option>
               <option value="On Progress">On Progress</option>
               <option value="Pending">Pending</option>
@@ -194,55 +205,69 @@
           </div>
         </div>
 
-        <!-- TOMBOL AKSI CEPAT (SHARE WA & EXPORT CSV) -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button type="button" id="btnCopyWA" onclick="copyWhatsAppRecap()" class="inline-flex items-center gap-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 font-semibold text-xs px-3.5 py-2 rounded-lg transition">
-            📋 Copy Rekap WA
-          </button>
-          <button type="button" onclick="exportToSpreadsheet()" class="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-semibold text-xs px-3.5 py-2 rounded-lg transition">
-            📊 Export Spreadsheet (.CSV)
-          </button>
+        <!-- Pembatas Internal -->
+        <div class="border-t border-slate-100 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <!-- Tombol Export & Copy WA (2 Kolom Sejajar) -->
+          <div class="grid grid-cols-2 sm:flex gap-2">
+            <button type="button" id="btnCopyWA" onclick="copyWhatsAppRecap()" class="inline-flex items-center justify-center gap-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 font-semibold text-xs px-3 py-2 rounded-lg transition">
+              📋 Copy Rekap WA
+            </button>
+            <button type="button" onclick="exportToSpreadsheet()" class="inline-flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-semibold text-xs px-3 py-2 rounded-lg transition">
+              📊 Export CSV
+            </button>
+          </div>
+
+          <!-- Legenda Warna Unit -->
+          <div class="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
+              <span class="w-2 h-2 rounded-full bg-emerald-600"></span> R&D
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span> KTC
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-800">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span> SCD
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-100 text-rose-800">
+              <span class="w-2 h-2 rounded-full bg-rose-600"></span> Bu Tanti
+            </span>
+          </div>
         </div>
       </div>
+    </section>
 
-      <!-- LEGENDA WARNA UNIT -->
-      <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs font-medium">
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="text-[11px] text-slate-400 mr-1">Keterangan Unit:</span>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> R&D
-          </span>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 border border-blue-300">
-            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> KTC
-          </span>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> SCD
-          </span>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-100 text-rose-800 border border-rose-300">
-            <span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span> Jadwal Bu Tanti
-          </span>
+    <!-- PEMBATAS ANTAR BAGIAN -->
+    <hr class="border-slate-300/80" />
+
+    <!-- ========================================================= -->
+    <!-- BAGIAN 4: DAFTAR AGENDA KERJA                             -->
+    <!-- ========================================================= -->
+    <div>
+      <div class="flex items-center justify-between mb-3 px-0.5">
+        <div class="flex items-center gap-2">
+          <h2 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">3. Daftar Agenda Kerja</h2>
+          <span id="listCountBadge" class="text-[11px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">0</span>
         </div>
-
-        <button type="button" onclick="toggleTvMode(true)" class="sm:hidden text-xs font-semibold text-slate-600 underline">
-          🖥️ Mode Layar TV
+        <button id="btnResetTodayInline" onclick="resetToToday()" class="hidden text-xs font-semibold text-amber-700 underline">
+          Kembali ke Hari Ini
         </button>
       </div>
-    </section>
 
-    <!-- INFO RINGKASAN FILTER AKTIF -->
-    <div id="filterSummaryBar" class="hidden bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between">
-      <span id="filterSummaryText">Menampilkan semua tanggal</span>
-      <button onclick="resetToToday()" class="underline font-semibold hover:text-amber-950">Kembali ke Hari Ini</button>
+      <!-- INFO RINGKASAN FILTER AKTIF -->
+      <div id="filterSummaryBar" class="hidden mb-3 bg-amber-50 border border-amber-200 text-amber-800 px-3.5 py-2 rounded-xl text-xs font-medium flex items-center justify-between">
+        <span id="filterSummaryText">Menampilkan semua tanggal</span>
+        <button onclick="resetToToday()" class="underline font-semibold hover:text-amber-950 ml-2 shrink-0">Hari Ini</button>
+      </div>
+
+      <!-- KARTU AGENDA -->
+      <section id="agendaList" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <div class="col-span-full text-center py-12 text-slate-400 text-sm">Memuat data agenda...</div>
+      </section>
     </div>
-
-    <!-- DAFTAR AGENDA -->
-    <section id="agendaList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="col-span-full text-center py-12 text-slate-400 text-sm">Memuat data agenda...</div>
-    </section>
 
   </main>
 
-  <!-- 4. MODAL EDIT AGENDA, STATUS & CATATAN KENDALA (REMARKS) -->
+  <!-- MODAL EDIT AGENDA, STATUS & CATATAN KENDALA (REMARKS) -->
   <div id="editModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
@@ -268,7 +293,7 @@
 
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">
-              Catatan / Kendala <span class="font-normal text-slate-400">(Opsional — misal alasan Pending / hasil)</span>
+              Catatan / Kendala <span class="font-normal text-slate-400">(Opsional — alasan Pending / hasil)</span>
             </label>
             <input type="text" id="editCatatan" placeholder="Contoh: Menunggu ACC desain / Reschedule besok" class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500" />
           </div>
@@ -384,25 +409,25 @@
 
     const UNIT_STYLES = {
       "R&D": {
-        card: "border-l-4 border-l-emerald-500 bg-white",
+        card: "border-l-4 border-l-emerald-500",
         badge: "bg-emerald-100 text-emerald-800 border-emerald-300",
         dot: "bg-emerald-500",
         emoji: "🟢"
       },
       "KTC": {
-        card: "border-l-4 border-l-blue-500 bg-white",
+        card: "border-l-4 border-l-blue-500",
         badge: "bg-blue-100 text-blue-800 border-blue-300",
         dot: "bg-blue-500",
         emoji: "🔵"
       },
       "SCD": {
-        card: "border-l-4 border-l-amber-400 bg-white",
+        card: "border-l-4 border-l-amber-400",
         badge: "bg-amber-100 text-amber-800 border-amber-300",
         dot: "bg-amber-500",
         emoji: "🟡"
       },
       "Jadwal Bu Tanti": {
-        card: "border-l-4 border-l-rose-500 bg-white",
+        card: "border-l-4 border-l-rose-500",
         badge: "bg-rose-100 text-rose-800 border-rose-300",
         dot: "bg-rose-500",
         emoji: "🔴"
@@ -434,6 +459,7 @@
       });
     }
 
+    // MODE LAYAR TV KANTOR
     window.toggleTvMode = (enable) => {
       isTvMode = enable;
       document.getElementById('mainNavbar').classList.toggle('hidden', enable);
@@ -447,8 +473,7 @@
       if (enable) {
         mainContainer.classList.remove('max-w-6xl');
         mainContainer.classList.add('max-w-7xl');
-        agendaList.classList.remove('md:grid-cols-2');
-        agendaList.classList.add('md:grid-cols-2', 'lg:grid-cols-3');
+        agendaList.classList.add('lg:grid-cols-3');
         document.getElementById('tvDateSubtitle').textContent = formatTanggalIndo(document.getElementById('filterTanggal').value || todayStr);
         updateTvClock();
       } else {
@@ -466,6 +491,7 @@
     }
     setInterval(updateTvClock, 1000);
 
+    // COPY REKAP WHATSAPP
     window.copyWhatsAppRecap = async () => {
       if (currentFilteredAgendas.length === 0) {
         alert("Tidak ada agenda untuk disalin pada filter saat ini.");
@@ -504,13 +530,14 @@
         await navigator.clipboard.writeText(textToCopy);
         const btn = document.getElementById('btnCopyWA');
         const originalText = btn.innerHTML;
-        btn.innerHTML = "✅ Tersalin! Siap Paste ke WA";
+        btn.innerHTML = "✅ Tersalin!";
         setTimeout(() => { btn.innerHTML = originalText; }, 2500);
       } catch (err) {
-        alert("Gagal menyalin teks otomatis. Silakan coba lagi.");
+        alert("Gagal menyalin teks otomatis.");
       }
     };
 
+    // EXPORT KE SPREADSHEET (.CSV)
     window.exportToSpreadsheet = () => {
       if (currentFilteredAgendas.length === 0) {
         alert("Tidak ada data agenda untuk di-export pada filter saat ini.");
@@ -696,9 +723,9 @@
 
         userBadge.classList.remove('hidden');
         userBadge.textContent = `Unit: ${activeSession.unit}`;
-        userBadge.className = `text-xs font-semibold px-3 py-1.5 rounded-full border ${UNIT_STYLES[activeSession.unit]?.badge || 'bg-slate-100'}`;
+        userBadge.className = `text-xs font-bold px-2.5 py-1 rounded-full border ${UNIT_STYLES[activeSession.unit]?.badge || 'bg-slate-100'}`;
 
-        modeSubtitle.textContent = `Kreasi Center • Login: ${activeSession.username.toUpperCase()}`;
+        modeSubtitle.textContent = `Kreasi Center • ${activeSession.username.toUpperCase()}`;
         createUnit.value = activeSession.unit;
         createUnitDisplay.value = activeSession.label || activeSession.unit;
 
@@ -868,6 +895,16 @@
       const fUnit = document.getElementById('filterUnit').value;
       const fStatus = document.getElementById('filterStatus').value;
 
+      // Update label tanggal aktif di bagian ringkasan
+      const activeDateLabel = document.getElementById('activeDateLabel');
+      if (isAllDatesMode) {
+        activeDateLabel.textContent = "Semua Tanggal";
+      } else if (fTanggal === todayStr) {
+        activeDateLabel.textContent = `Hari Ini (${formatTanggalIndo(fTanggal)})`;
+      } else {
+        activeDateLabel.textContent = formatTanggalIndo(fTanggal);
+      }
+
       const baseFiltered = allAgendas.filter(item => {
         const matchTanggal = !fTanggal || item.tanggal === fTanggal;
         const irisanList = Array.isArray(item.irisan) ? item.irisan : [];
@@ -899,21 +936,22 @@
           return (a.waktu || "").localeCompare(b.waktu || "");
         });
         document.getElementById('filterSummaryText').textContent =
-          `Menampilkan ${filtered.length} agenda dari semua tanggal` + (fStatus !== "ALL" ? ` (Status: ${fStatus})` : '');
+          `Menampilkan ${filtered.length} agenda lintas tanggal` + (fStatus !== "ALL" ? ` (${fStatus})` : '');
       }
 
       currentFilteredAgendas = filtered;
+      document.getElementById('listCountBadge').textContent = filtered.length;
 
       if (filtered.length === 0) {
         container.innerHTML = `
-          <div class="col-span-full bg-white border border-dashed border-slate-300 rounded-xl p-10 text-center text-slate-400 text-sm">
-            Belum ada agenda untuk tanggal/filter ini.
+          <div class="col-span-full bg-white border-2 border-dashed border-slate-300 rounded-2xl p-10 text-center text-slate-400 text-sm">
+            Belum ada agenda untuk tanggal atau filter yang dipilih.
           </div>`;
         return;
       }
 
       container.innerHTML = filtered.map(item => {
-        const style = UNIT_STYLES[item.unit] || { card: "border-l-4 border-slate-400 bg-white", badge: "bg-slate-100 text-slate-700" };
+        const style = UNIT_STYLES[item.unit] || { card: "border-l-4 border-slate-400", badge: "bg-slate-100 text-slate-700" };
         const effectiveStatus = getEffectiveStatus(item);
         const isSelesai = effectiveStatus === "Selesai";
         const isPending = effectiveStatus === "Pending";
@@ -930,27 +968,27 @@
 
         let statusBadge = '';
         if (isSelesai) {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">✓ Selesai</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100/80 text-emerald-800 border border-emerald-300 shrink-0">✓ Selesai</span>`;
         } else if (isPending) {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">⏳ Pending</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100/80 text-amber-800 border border-amber-300 shrink-0">⏳ Pending</span>`;
         } else {
-          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">🔄 On Progress</span>`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100/80 text-sky-800 border border-sky-300 shrink-0">🔄 On Progress</span>`;
         }
 
         const catatanHTML = item.catatan ? `
-          <div class="mt-2 bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-600">
-            <span class="font-semibold text-slate-700">📝 Catatan:</span> ${escapeHTML(item.catatan)}
+          <div class="mt-2.5 bg-amber-50/70 border border-amber-200/80 rounded-lg px-3 py-1.5 text-xs text-slate-700">
+            <span class="font-bold text-slate-800">📝 Catatan:</span> ${escapeHTML(item.catatan)}
           </div>
         ` : '';
 
         const actionButtons = isCreator ? `
-          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-            <button onclick="quickMarkSelesai('${item.id}', '${effectiveStatus}')" class="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+          <div class="mt-3.5 pt-3 border-t border-slate-200/80 flex items-center justify-between gap-2">
+            <button onclick="quickMarkSelesai('${item.id}', '${effectiveStatus}')" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
               ${isSelesai ? 'Kembalikan Status' : '✓ Tandai Selesai'}
             </button>
-            <div class="flex items-center gap-3">
-              <button onclick="openEditModal('${item.id}')" class="text-xs font-semibold text-blue-600 hover:underline">Edit / Status</button>
-              <button onclick="deleteAgenda('${item.id}')" class="text-xs font-medium text-rose-600 hover:underline">Hapus</button>
+            <div class="flex items-center gap-3.5">
+              <button onclick="openEditModal('${item.id}')" class="text-xs font-bold text-blue-600 hover:underline">Edit / Status</button>
+              <button onclick="deleteAgenda('${item.id}')" class="text-xs font-semibold text-rose-600 hover:underline">Hapus</button>
             </div>
           </div>
         ` : (!isTvMode && activeSession && irisanList.includes(activeSession.unit) ? `
@@ -959,20 +997,24 @@
           </div>
         ` : '');
 
+        const cardBg = isSelesai ? "bg-slate-50/90" : "bg-white";
+
         return `
-          <div class="${style.card} rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col justify-between transition hover:shadow-md">
+          <div class="${cardBg} ${style.card} rounded-xl border border-slate-200/90 p-4 shadow-xs flex flex-col justify-between transition hover:shadow-md">
             <div>
-              <div class="flex items-start justify-between gap-2 mb-2">
+              <div class="flex items-start justify-between gap-2 mb-2.5">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <span class="text-xs font-bold px-2.5 py-0.5 rounded-md border ${style.badge}">${item.unit}</span>
                   ${irisanBadges}
                 </div>
                 ${statusBadge}
               </div>
-              <p class="text-xs font-semibold text-slate-500 mb-1.5">
-                📅 <span class="text-slate-700">${formatTanggalIndo(item.tanggal)}</span> &bull; 🕒 ${item.waktu}
-              </p>
-              <p class="text-sm sm:text-base font-medium text-slate-800 ${isSelesai ? 'line-through text-slate-400' : ''}">
+              <div class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-100/80 px-2.5 py-1 rounded-md mb-2">
+                <span>📅 ${formatTanggalIndo(item.tanggal)}</span>
+                <span class="text-slate-300">|</span>
+                <span>🕒 ${item.waktu}</span>
+              </div>
+              <p class="text-sm sm:text-base font-semibold text-slate-900 leading-snug">
                 ${escapeHTML(item.kegiatan)}
               </p>
               ${catatanHTML}

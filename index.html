@@ -58,13 +58,19 @@
         </div>
 
         <div class="sm:col-span-2">
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Unit / Kategori</label>
-          <select id="createUnit" disabled class="w-full border border-slate-300 bg-slate-100 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700">
-            <option value="R&D">R&D (Hijau)</option>
-            <option value="KTC">KTC (Biru)</option>
-            <option value="SCD">SCD (Kuning)</option>
-            <option value="Jadwal Bu Tanti">Jadwal Bu Tanti (Merah)</option>
-          </select>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Unit Pembuat (Otomatis)</label>
+          <input type="text" id="createUnitDisplay" readonly class="w-full border border-slate-300 bg-slate-100 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 cursor-not-allowed" />
+          <input type="hidden" id="createUnit" />
+        </div>
+
+        <!-- PILIHAN IRISAN UNIT LAIN -->
+        <div class="col-span-full bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <label class="block text-xs font-semibold text-slate-700 mb-2">
+            Irisan / Kolaborasi dengan Unit Lain <span class="font-normal text-slate-400">(Opsional — centang jika melibatkan unit lain)</span>
+          </label>
+          <div id="createIrisanContainer" class="flex flex-wrap gap-3">
+            <!-- Diisi otomatis sesuai akun yang tidak sedang login -->
+          </div>
         </div>
 
         <div class="sm:col-span-2 lg:col-span-3">
@@ -88,7 +94,7 @@
           <input type="date" id="filterTanggal" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium" />
         </div>
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase">Filter Unit</label>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase">Filter Unit & Irisan</label>
           <select id="filterUnit" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
             <option value="ALL">Semua Unit</option>
             <option value="R&D">R&D (Hijau)</option>
@@ -131,13 +137,13 @@
 
   </main>
 
-  <!-- 2. BAGIAN KHUSUS EDIT AGENDA & STATUS (MODAL TERPISAH) -->
+  <!-- 2. BAGIAN KHUSUS EDIT AGENDA & STATUS (MODAL TERPISAH - HANYA PEMBUAT) -->
   <div id="editModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
       <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
         <div>
           <h3 class="text-base font-bold text-slate-900">Edit Agenda & Status</h3>
-          <p class="text-xs text-slate-500" id="editUnitLabel">Unit: -</p>
+          <p class="text-xs text-slate-500" id="editUnitLabel">Unit Pembuat: -</p>
         </div>
         <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
       </div>
@@ -145,7 +151,6 @@
       <form id="editAgendaForm" class="space-y-4">
         <input type="hidden" id="editDocId" />
 
-        <!-- Status Paling Atas Agar Mudah Diubah -->
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Update Status Agenda</label>
           <select id="editStatus" class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-slate-500">
@@ -164,6 +169,14 @@
             <select id="editWaktu" required class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm">
               <!-- Diisi otomatis via JavaScript -->
             </select>
+          </div>
+        </div>
+
+        <!-- EDIT IRISAN UNIT LAIN -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">Irisan / Kolaborasi Unit Lain</label>
+          <div id="editIrisanContainer" class="flex flex-wrap gap-2.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+            <!-- Diisi otomatis -->
           </div>
         </div>
 
@@ -224,13 +237,14 @@
     };
 
     const ACCOUNTS = {
-      "rnd":     { pass: "rndkreasi",     unit: "R&D",             isSuperAdmin: true },
-      "ktc":     { pass: "ktckreasi",     unit: "KTC",             isSuperAdmin: false },
-      "scd":     { pass: "scdkreasi",     unit: "SCD",             isSuperAdmin: false },
-      "butanti": { pass: "butantikreasi", unit: "Jadwal Bu Tanti", isSuperAdmin: false }
+      "rnd":     { pass: "rndkreasi",     unit: "R&D",             label: "R&D (Hijau)" },
+      "ktc":     { pass: "ktckreasi",     unit: "KTC",             label: "KTC (Biru)" },
+      "scd":     { pass: "scdkreasi",     unit: "SCD",             label: "SCD (Kuning)" },
+      "butanti": { pass: "butantikreasi", unit: "Jadwal Bu Tanti", label: "Jadwal Bu Tanti (Merah)" }
     };
 
-    // DAFTAR OPSI JAM SERAGAM
+    const ALL_UNITS = ["R&D", "KTC", "SCD", "Jadwal Bu Tanti"];
+
     const TIME_SLOTS = [
       "07:00 - 08:00",
       "08:00 - 09:00",
@@ -248,12 +262,10 @@
       "08:00 - 17:00 (Full Day)"
     ];
 
-    // Isi opsi dropdown jam ke form Input & form Edit
     function populateTimeDropdowns() {
       const optionsHTML = TIME_SLOTS.map(slot => `<option value="${slot}">${slot}</option>`).join('');
       document.getElementById('createWaktu').innerHTML = optionsHTML;
       document.getElementById('editWaktu').innerHTML = optionsHTML;
-      // Default pilihan di form input ke 08:00 - 09:00
       document.getElementById('createWaktu').value = "08:00 - 09:00";
     }
     populateTimeDropdowns();
@@ -261,19 +273,23 @@
     const UNIT_STYLES = {
       "R&D": {
         card: "border-l-4 border-l-emerald-500 bg-white",
-        badge: "bg-emerald-100 text-emerald-800 border-emerald-300"
+        badge: "bg-emerald-100 text-emerald-800 border-emerald-300",
+        dot: "bg-emerald-500"
       },
       "KTC": {
         card: "border-l-4 border-l-blue-500 bg-white",
-        badge: "bg-blue-100 text-blue-800 border-blue-300"
+        badge: "bg-blue-100 text-blue-800 border-blue-300",
+        dot: "bg-blue-500"
       },
       "SCD": {
         card: "border-l-4 border-l-amber-400 bg-white",
-        badge: "bg-amber-100 text-amber-800 border-amber-300"
+        badge: "bg-amber-100 text-amber-800 border-amber-300",
+        dot: "bg-amber-500"
       },
       "Jadwal Bu Tanti": {
         card: "border-l-4 border-l-rose-500 bg-white",
-        badge: "bg-rose-100 text-rose-800 border-rose-300"
+        badge: "bg-rose-100 text-rose-800 border-rose-300",
+        dot: "bg-rose-500"
       }
     };
 
@@ -287,23 +303,46 @@
     document.getElementById('filterTanggal').value = todayStr;
     document.getElementById('createTanggal').value = todayStr;
 
-    // Modal Login
+    // Render Checkbox Irisan (mengecualikan unit utama)
+    function renderIrisanCheckboxes(containerId, ownerUnit, selectedUnits = []) {
+      const container = document.getElementById(containerId);
+      const otherUnits = ALL_UNITS.filter(u => u !== ownerUnit);
+
+      container.innerHTML = otherUnits.map(u => {
+        const checked = selectedUnits.includes(u) ? "checked" : "";
+        const style = UNIT_STYLES[u];
+        return `
+          <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-700 select-none">
+            <input type="checkbox" name="${containerId}_irisan" value="${u}" ${checked} class="rounded text-slate-900 focus:ring-slate-500" />
+            <span class="w-2 h-2 rounded-full ${style.dot}"></span>
+            <span>${u}</span>
+          </label>
+        `;
+      }).join('');
+    }
+
+    function getSelectedIrisan(containerId) {
+      return Array.from(document.querySelectorAll(`input[name="${containerId}_irisan"]:checked`))
+        .map(cb => cb.value);
+    }
+
     window.toggleLoginModal = (show) => {
       document.getElementById('loginModal').classList.toggle('hidden', !show);
       document.getElementById('loginError').classList.add('hidden');
     };
 
-    // Modal Edit
     window.openEditModal = (id) => {
       const item = allAgendas.find(a => a.id === id);
       if (!item) return;
 
+      // Pastikan hanya pembuat agenda yang bisa membuka modal edit
+      if (!activeSession || item.unit !== activeSession.unit) return;
+
       document.getElementById('editDocId').value = item.id;
-      document.getElementById('editUnitLabel').textContent = `Unit: ${item.unit}`;
+      document.getElementById('editUnitLabel').textContent = `Unit Pembuat: ${item.unit}`;
       document.getElementById('editStatus').value = item.status;
       document.getElementById('editTanggal').value = item.tanggal;
       
-      // Jika ada data lama yang jamnya belum ada di dropdown, tambahkan sementara agar tetap terpilih
       const editWaktuEl = document.getElementById('editWaktu');
       if (!TIME_SLOTS.includes(item.waktu)) {
         const tempOpt = document.createElement('option');
@@ -313,6 +352,7 @@
       }
       editWaktuEl.value = item.waktu;
       
+      renderIrisanCheckboxes('editIrisanContainer', item.unit, item.irisan || []);
       document.getElementById('editKegiatan').value = item.kegiatan;
       document.getElementById('editModal').classList.remove('hidden');
     };
@@ -322,7 +362,6 @@
       document.getElementById('editAgendaForm').reset();
     };
 
-    // Update UI Auth
     function updateAuthUI() {
       const btnOpenLogin = document.getElementById('btnOpenLogin');
       const btnLogout = document.getElementById('btnLogout');
@@ -330,6 +369,7 @@
       const userBadge = document.getElementById('userBadge');
       const modeSubtitle = document.getElementById('modeSubtitle');
       const createUnit = document.getElementById('createUnit');
+      const createUnitDisplay = document.getElementById('createUnitDisplay');
 
       if (activeSession) {
         btnOpenLogin.classList.add('hidden');
@@ -342,14 +382,9 @@
 
         modeSubtitle.textContent = `Login sebagai: ${activeSession.username.toUpperCase()}`;
         createUnit.value = activeSession.unit;
+        createUnitDisplay.value = activeSession.label || activeSession.unit;
 
-        if (activeSession.isSuperAdmin) {
-          createUnit.disabled = false;
-          createUnit.classList.remove('bg-slate-100');
-        } else {
-          createUnit.disabled = true;
-          createUnit.classList.add('bg-slate-100');
-        }
+        renderIrisanCheckboxes('createIrisanContainer', activeSession.unit, []);
       } else {
         btnOpenLogin.classList.remove('hidden');
         btnLogout.classList.add('hidden');
@@ -360,7 +395,6 @@
       renderAgendas();
     }
 
-    // Login Submit
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const uname = document.getElementById('loginUsername').value.trim().toLowerCase();
@@ -372,7 +406,7 @@
         activeSession = {
           username: uname,
           unit: account.unit,
-          isSuperAdmin: account.isSuperAdmin
+          label: account.label
         };
         localStorage.setItem("agenda_session", JSON.stringify(activeSession));
         toggleLoginModal(false);
@@ -384,7 +418,6 @@
       }
     });
 
-    // Logout
     window.handleLogout = () => {
       activeSession = null;
       localStorage.removeItem("agenda_session");
@@ -392,7 +425,7 @@
       updateAuthUI();
     };
 
-    // 1. SUBMIT INPUT AGENDA BARU (Otomatis Status = Pending)
+    // Simpan Agenda Baru + Irisan
     document.getElementById('createAgendaForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!activeSession) return;
@@ -402,10 +435,12 @@
       btn.textContent = "Menyimpan...";
 
       try {
+        const irisanSelected = getSelectedIrisan('createIrisanContainer');
         await addDoc(collection(db, "agendas"), {
           tanggal: document.getElementById('createTanggal').value,
           waktu: document.getElementById('createWaktu').value,
-          unit: document.getElementById('createUnit').value,
+          unit: activeSession.unit,
+          irisan: irisanSelected,
           kegiatan: document.getElementById('createKegiatan').value.trim(),
           status: "Pending",
           createdBy: activeSession.username,
@@ -413,6 +448,7 @@
         });
 
         document.getElementById('createKegiatan').value = "";
+        renderIrisanCheckboxes('createIrisanContainer', activeSession.unit, []);
       } catch (err) {
         alert("Gagal menambah agenda: " + err.message);
       } finally {
@@ -421,21 +457,26 @@
       }
     });
 
-    // 2. SUBMIT EDIT AGENDA & STATUS
+    // Simpan Edit Agenda + Irisan (Hanya Pembuat)
     document.getElementById('editAgendaForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!activeSession) return;
 
       const docId = document.getElementById('editDocId').value;
+      const item = allAgendas.find(a => a.id === docId);
+      if (!item || item.unit !== activeSession.unit) return;
+
       const btn = document.getElementById('btnEditSubmit');
       btn.disabled = true;
       btn.textContent = "Menyimpan...";
 
       try {
+        const irisanSelected = getSelectedIrisan('editIrisanContainer');
         await updateDoc(doc(db, "agendas", docId), {
           status: document.getElementById('editStatus').value,
           tanggal: document.getElementById('editTanggal').value,
           waktu: document.getElementById('editWaktu').value,
+          irisan: irisanSelected,
           kegiatan: document.getElementById('editKegiatan').value.trim(),
           updatedBy: activeSession.username,
           updatedAt: new Date().toISOString()
@@ -449,13 +490,16 @@
       }
     });
 
-    // Toggle Status Cepat dari Kartu
+    // Toggle Status Cepat (Hanya Pembuat)
     window.toggleStatus = async (id, currentStatus) => {
+      const item = allAgendas.find(a => a.id === id);
+      if (!activeSession || !item || item.unit !== activeSession.unit) return;
+
       const nextStatus = currentStatus === "Pending" ? "Selesai" : "Pending";
       try {
         await updateDoc(doc(db, "agendas", id), {
           status: nextStatus,
-          updatedBy: activeSession?.username || "",
+          updatedBy: activeSession.username,
           updatedAt: new Date().toISOString()
         });
       } catch (err) {
@@ -463,8 +507,11 @@
       }
     };
 
-    // Hapus Agenda
+    // Hapus Agenda (Hanya Pembuat)
     window.deleteAgenda = async (id) => {
+      const item = allAgendas.find(a => a.id === id);
+      if (!activeSession || !item || item.unit !== activeSession.unit) return;
+
       if (!confirm("Yakin ingin menghapus agenda ini?")) return;
       try {
         await deleteDoc(doc(db, "agendas", id));
@@ -473,7 +520,6 @@
       }
     };
 
-    // Real-time Listener Firestore
     const q = query(collection(db, "agendas"), orderBy("waktu", "asc"));
     onSnapshot(q, (snapshot) => {
       allAgendas = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -484,7 +530,6 @@
       document.getElementById(id).addEventListener('change', renderAgendas);
     });
 
-    // Render Daftar Agenda
     function renderAgendas() {
       const container = document.getElementById('agendaList');
       const fTanggal = document.getElementById('filterTanggal').value;
@@ -493,7 +538,9 @@
 
       const filtered = allAgendas.filter(item => {
         const matchTanggal = !fTanggal || item.tanggal === fTanggal;
-        const matchUnit = fUnit === "ALL" || item.unit === fUnit;
+        const irisanList = Array.isArray(item.irisan) ? item.irisan : [];
+        // Muncul jika merupakan unit pembuat ATAU termasuk dalam unit irisan
+        const matchUnit = fUnit === "ALL" || item.unit === fUnit || irisanList.includes(fUnit);
         const matchStatus = fStatus === "ALL" || item.status === fStatus;
         return matchTanggal && matchUnit && matchStatus;
       });
@@ -509,13 +556,23 @@
       container.innerHTML = filtered.map(item => {
         const style = UNIT_STYLES[item.unit] || { card: "border-l-4 border-slate-400 bg-white", badge: "bg-slate-100 text-slate-700" };
         const isSelesai = item.status === "Selesai";
-        const canEdit = activeSession && (activeSession.isSuperAdmin || item.unit === activeSession.unit);
+        const irisanList = Array.isArray(item.irisan) ? item.irisan : [];
+        
+        // HANYA pembuat agenda (item.unit === activeSession.unit) yang boleh edit/hapus/ubah status
+        const isCreator = activeSession && item.unit === activeSession.unit;
+
+        const irisanBadges = irisanList.length > 0
+          ? irisanList.map(u => {
+              const uStyle = UNIT_STYLES[u] || { badge: "bg-slate-100 text-slate-700 border-slate-300" };
+              return `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-md border ${uStyle.badge}">+ ${u}</span>`;
+            }).join('')
+          : '';
 
         const statusBadge = isSelesai
-          ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Selesai</span>`
-          : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">⏳ Pending</span>`;
+          ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">✓ Selesai</span>`
+          : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">⏳ Pending</span>`;
 
-        const actionButtons = canEdit ? `
+        const actionButtons = isCreator ? `
           <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
             <button onclick="toggleStatus('${item.id}', '${item.status}')" class="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
               Tandai ${isSelesai ? 'Pending' : 'Selesai'}
@@ -525,13 +582,20 @@
               <button onclick="deleteAgenda('${item.id}')" class="text-xs font-medium text-rose-600 hover:underline">Hapus</button>
             </div>
           </div>
-        ` : '';
+        ` : (activeSession && irisanList.includes(activeSession.unit) ? `
+          <div class="mt-3 pt-2.5 border-t border-slate-100">
+            <p class="text-[11px] text-slate-400 italic">🤝 Agenda irisan dari <strong class="text-slate-600">${item.unit}</strong> (Hanya pembuat yang dapat mengedit)</p>
+          </div>
+        ` : '');
 
         return `
           <div class="${style.card} rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col justify-between transition hover:shadow-md">
             <div>
-              <div class="flex items-center justify-between gap-2 mb-2">
-                <span class="text-xs font-bold px-2.5 py-0.5 rounded-md border ${style.badge}">${item.unit}</span>
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="text-xs font-bold px-2.5 py-0.5 rounded-md border ${style.badge}">${item.unit}</span>
+                  ${irisanBadges}
+                </div>
                 ${statusBadge}
               </div>
               <p class="text-xs font-semibold text-slate-500 mb-1">🕒 ${item.waktu} &bull; 📅 ${item.tanggal}</p>

@@ -40,7 +40,9 @@
       <div class="flex items-center justify-between mb-4">
         <div>
           <h2 class="font-bold text-slate-800 text-base">Input Agenda Baru</h2>
-          <p class="text-xs text-slate-500">Agenda baru otomatis masuk dengan status <span class="font-semibold text-amber-600">Pending</span></p>
+          <p class="text-xs text-slate-500">
+            Status awal otomatis <span class="font-semibold text-sky-600">On Progress</span> (otomatis menjadi <span class="font-semibold text-amber-600">Pending</span> jika lewat jam 17:00 belum selesai)
+          </p>
         </div>
       </div>
 
@@ -107,6 +109,7 @@
           <label class="block text-[11px] font-semibold text-slate-500 uppercase">Filter Status</label>
           <select id="filterStatus" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
             <option value="ALL">Semua Status</option>
+            <option value="On Progress">On Progress</option>
             <option value="Pending">Pending</option>
             <option value="Selesai">Selesai</option>
           </select>
@@ -154,6 +157,7 @@
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Update Status Agenda</label>
           <select id="editStatus" class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-slate-500">
+            <option value="On Progress">🔄 On Progress</option>
             <option value="Pending">⏳ Pending</option>
             <option value="Selesai">✓ Selesai</option>
           </select>
@@ -303,7 +307,24 @@
     document.getElementById('filterTanggal').value = todayStr;
     document.getElementById('createTanggal').value = todayStr;
 
-    // Render Checkbox Irisan (mengecualikan unit utama)
+    // LOGIKA STATUS EFEKTIF:
+    // Jika masih "On Progress" dan sudah melewati jam 17:00 di tanggal agenda (atau tanggal agenda sudah lewat),
+    // otomatis tampil sebagai "Pending".
+    function getEffectiveStatus(item) {
+      if (item.status === "Selesai") return "Selesai";
+      if (item.status === "Pending") return "Pending";
+
+      const now = new Date();
+      const currentDateStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const currentHour = now.getHours();
+
+      if (item.tanggal < currentDateStr || (item.tanggal === currentDateStr && currentHour >= 17)) {
+        return "Pending";
+      }
+      return "On Progress";
+    }
+
+    // Render Checkbox Irisan
     function renderIrisanCheckboxes(containerId, ownerUnit, selectedUnits = []) {
       const container = document.getElementById(containerId);
       const otherUnits = ALL_UNITS.filter(u => u !== ownerUnit);
@@ -335,12 +356,11 @@
       const item = allAgendas.find(a => a.id === id);
       if (!item) return;
 
-      // Pastikan hanya pembuat agenda yang bisa membuka modal edit
       if (!activeSession || item.unit !== activeSession.unit) return;
 
       document.getElementById('editDocId').value = item.id;
       document.getElementById('editUnitLabel').textContent = `Unit Pembuat: ${item.unit}`;
-      document.getElementById('editStatus').value = item.status;
+      document.getElementById('editStatus').value = getEffectiveStatus(item);
       document.getElementById('editTanggal').value = item.tanggal;
       
       const editWaktuEl = document.getElementById('editWaktu');
@@ -425,7 +445,7 @@
       updateAuthUI();
     };
 
-    // Simpan Agenda Baru + Irisan
+    // Simpan Agenda Baru -> Status Awal "On Progress"
     document.getElementById('createAgendaForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!activeSession) return;
@@ -442,7 +462,7 @@
           unit: activeSession.unit,
           irisan: irisanSelected,
           kegiatan: document.getElementById('createKegiatan').value.trim(),
-          status: "Pending",
+          status: "On Progress",
           createdBy: activeSession.username,
           createdAt: new Date().toISOString()
         });
@@ -490,12 +510,12 @@
       }
     });
 
-    // Toggle Status Cepat (Hanya Pembuat)
-    window.toggleStatus = async (id, currentStatus) => {
+    // Tombol Cepat Tandai Selesai / Kembalikan
+    window.quickMarkSelesai = async (id, currentEffectiveStatus) => {
       const item = allAgendas.find(a => a.id === id);
       if (!activeSession || !item || item.unit !== activeSession.unit) return;
 
-      const nextStatus = currentStatus === "Pending" ? "Selesai" : "Pending";
+      const nextStatus = currentEffectiveStatus === "Selesai" ? "On Progress" : "Selesai";
       try {
         await updateDoc(doc(db, "agendas", id), {
           status: nextStatus,
@@ -526,6 +546,9 @@
       renderAgendas();
     });
 
+    // Cek ulang otomatis setiap 1 menit (misalnya tepat melewati pukul 17:00 saat layar terbuka)
+    setInterval(renderAgendas, 60000);
+
     ['filterTanggal', 'filterUnit', 'filterStatus'].forEach(id => {
       document.getElementById(id).addEventListener('change', renderAgendas);
     });
@@ -537,11 +560,11 @@
       const fStatus = document.getElementById('filterStatus').value;
 
       const filtered = allAgendas.filter(item => {
+        const effectiveStatus = getEffectiveStatus(item);
         const matchTanggal = !fTanggal || item.tanggal === fTanggal;
         const irisanList = Array.isArray(item.irisan) ? item.irisan : [];
-        // Muncul jika merupakan unit pembuat ATAU termasuk dalam unit irisan
         const matchUnit = fUnit === "ALL" || item.unit === fUnit || irisanList.includes(fUnit);
-        const matchStatus = fStatus === "ALL" || item.status === fStatus;
+        const matchStatus = fStatus === "ALL" || effectiveStatus === fStatus;
         return matchTanggal && matchUnit && matchStatus;
       });
 
@@ -555,10 +578,11 @@
 
       container.innerHTML = filtered.map(item => {
         const style = UNIT_STYLES[item.unit] || { card: "border-l-4 border-slate-400 bg-white", badge: "bg-slate-100 text-slate-700" };
-        const isSelesai = item.status === "Selesai";
+        const effectiveStatus = getEffectiveStatus(item);
+        const isSelesai = effectiveStatus === "Selesai";
+        const isPending = effectiveStatus === "Pending";
         const irisanList = Array.isArray(item.irisan) ? item.irisan : [];
         
-        // HANYA pembuat agenda (item.unit === activeSession.unit) yang boleh edit/hapus/ubah status
         const isCreator = activeSession && item.unit === activeSession.unit;
 
         const irisanBadges = irisanList.length > 0
@@ -568,14 +592,19 @@
             }).join('')
           : '';
 
-        const statusBadge = isSelesai
-          ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">✓ Selesai</span>`
-          : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">⏳ Pending</span>`;
+        let statusBadge = '';
+        if (isSelesai) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">✓ Selesai</span>`;
+        } else if (isPending) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">⏳ Pending</span>`;
+        } else {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">🔄 On Progress</span>`;
+        }
 
         const actionButtons = isCreator ? `
           <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-            <button onclick="toggleStatus('${item.id}', '${item.status}')" class="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-              Tandai ${isSelesai ? 'Pending' : 'Selesai'}
+            <button onclick="quickMarkSelesai('${item.id}', '${effectiveStatus}')" class="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+              ${isSelesai ? 'Kembalikan Status' : '✓ Tandai Selesai'}
             </button>
             <div class="flex items-center gap-3">
               <button onclick="openEditModal('${item.id}')" class="text-xs font-semibold text-blue-600 hover:underline">Edit / Status</button>

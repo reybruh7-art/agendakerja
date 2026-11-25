@@ -13,14 +13,17 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
   <!-- NAVBAR -->
-  <nav class="bg-white border-b border-slate-200 sticky top-0 z-30">
+  <nav id="mainNavbar" class="bg-white border-b border-slate-200 sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="text-lg sm:text-xl font-bold text-slate-900">Agenda Kerja Harian</h1>
-        <p class="text-xs text-slate-500" id="modeSubtitle">Dashboard Publik (Hanya Lihat)</p>
+        <p class="text-xs font-medium text-slate-500" id="modeSubtitle">Kreasi Center</p>
       </div>
       
       <div class="flex items-center gap-2">
+        <button type="button" onclick="toggleTvMode(true)" class="hidden sm:inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg transition" title="Tampilan bersih untuk monitor kantor">
+          🖥️ Mode Layar TV
+        </button>
         <span id="userBadge" class="hidden text-xs font-semibold px-3 py-1.5 rounded-full"></span>
         <button id="btnOpenLogin" onclick="toggleLoginModal(true)" class="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
           Login Akun
@@ -32,8 +35,24 @@
     </div>
   </nav>
 
+  <!-- HEADER KHUSUS MODE LAYAR TV -->
+  <header id="tvHeader" class="hidden bg-slate-900 text-white px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">Papan Agenda Kerja Harian — Kreasi Center</h1>
+        <p class="text-sm text-slate-300" id="tvDateSubtitle">Memuat tanggal...</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="tvClock" class="text-2xl font-mono font-bold text-emerald-400"></span>
+        <button onclick="toggleTvMode(false)" class="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">
+          ✕ Keluar Mode TV
+        </button>
+      </div>
+    </div>
+  </header>
+
   <!-- MAIN CONTAINER -->
-  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+  <main id="mainContainer" class="max-w-6xl mx-auto px-4 py-6 space-y-5">
 
     <!-- 1. BAGIAN KHUSUS INPUT AGENDA BARU (Hanya Muncul Setelah Login) -->
     <section id="inputSection" class="hidden bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -55,7 +74,6 @@
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Waktu / Jam</label>
           <select id="createWaktu" required class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500">
-            <!-- Diisi otomatis via JavaScript -->
           </select>
         </div>
 
@@ -71,7 +89,6 @@
             Irisan / Kolaborasi dengan Unit Lain <span class="font-normal text-slate-400">(Opsional — centang jika melibatkan unit lain)</span>
           </label>
           <div id="createIrisanContainer" class="flex flex-wrap gap-3">
-            <!-- Diisi otomatis sesuai akun yang tidak sedang login -->
           </div>
         </div>
 
@@ -88,55 +105,109 @@
       </form>
     </section>
 
-    <!-- FILTER & LEGENDA WARNA -->
-    <section class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-      <div class="flex flex-wrap items-end gap-3">
+    <!-- 2. KARTU RINGKASAN STATISTIK (MINI COUNTER) -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
         <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Tanggal</label>
-          <div class="flex items-center gap-1.5">
-            <input type="date" id="filterTanggal" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium" />
-            <button type="button" id="btnSemuaTanggal" onclick="toggleSemuaTanggal()" class="border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold transition">
-              Semua Tanggal
-            </button>
+          <p class="text-[11px] font-semibold text-slate-500 uppercase">Total Agenda</p>
+          <p id="statTotal" class="text-xl font-bold text-slate-900 mt-0.5">0</p>
+        </div>
+        <span class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-base">📋</span>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-semibold text-sky-600 uppercase">On Progress</p>
+          <p id="statProgress" class="text-xl font-bold text-sky-700 mt-0.5">0</p>
+        </div>
+        <span class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-base">🔄</span>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-semibold text-amber-600 uppercase">Pending</p>
+          <p id="statPending" class="text-xl font-bold text-amber-700 mt-0.5">0</p>
+        </div>
+        <span class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-base">⏳</span>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-semibold text-emerald-600 uppercase">Selesai</p>
+          <p id="statSelesai" class="text-xl font-bold text-emerald-700 mt-0.5">0</p>
+        </div>
+        <span class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">✓</span>
+      </div>
+    </section>
+
+    <!-- 3. FILTER, SHARE WA, EXPORT SPREADSHEET & LEGENDA WARNA -->
+    <section id="filterSection" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div class="flex flex-wrap items-end gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Tanggal</label>
+            <div class="flex items-center gap-1.5">
+              <input type="date" id="filterTanggal" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium" />
+              <button type="button" id="btnSemuaTanggal" onclick="toggleSemuaTanggal()" class="border border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold transition">
+                Semua Tanggal
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Unit & Irisan</label>
+            <select id="filterUnit" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
+              <option value="ALL">Semua Unit</option>
+              <option value="R&D">R&D (Hijau)</option>
+              <option value="KTC">KTC (Biru)</option>
+              <option value="SCD">SCD (Kuning)</option>
+              <option value="Jadwal Bu Tanti">Jadwal Bu Tanti (Merah)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Status</label>
+            <select id="filterStatus" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
+              <option value="ALL">Semua Status</option>
+              <option value="On Progress">On Progress</option>
+              <option value="Pending">Pending</option>
+              <option value="Selesai">Selesai</option>
+            </select>
           </div>
         </div>
 
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Unit & Irisan</label>
-          <select id="filterUnit" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
-            <option value="ALL">Semua Unit</option>
-            <option value="R&D">R&D (Hijau)</option>
-            <option value="KTC">KTC (Biru)</option>
-            <option value="SCD">SCD (Kuning)</option>
-            <option value="Jadwal Bu Tanti">Jadwal Bu Tanti (Merah)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Filter Status</label>
-          <select id="filterStatus" class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium">
-            <option value="ALL">Semua Status</option>
-            <option value="On Progress">On Progress</option>
-            <option value="Pending">Pending</option>
-            <option value="Selesai">Selesai</option>
-          </select>
+        <!-- TOMBOL AKSI CEPAT (SHARE WA & EXPORT CSV) -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" id="btnCopyWA" onclick="copyWhatsAppRecap()" class="inline-flex items-center gap-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 font-semibold text-xs px-3.5 py-2 rounded-lg transition">
+            📋 Copy Rekap WA
+          </button>
+          <button type="button" onclick="exportToSpreadsheet()" class="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-semibold text-xs px-3.5 py-2 rounded-lg transition">
+            📊 Export Spreadsheet (.CSV)
+          </button>
         </div>
       </div>
 
       <!-- LEGENDA WARNA UNIT -->
-      <div class="flex flex-wrap items-center gap-2 text-xs font-medium">
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> R&D
-        </span>
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 border border-blue-300">
-          <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> KTC
-        </span>
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
-          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> SCD
-        </span>
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-100 text-rose-800 border border-rose-300">
-          <span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span> Jadwal Bu Tanti
-        </span>
+      <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs font-medium">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-[11px] text-slate-400 mr-1">Keterangan Unit:</span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> R&D
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 border border-blue-300">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> KTC
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> SCD
+          </span>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-100 text-rose-800 border border-rose-300">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span> Jadwal Bu Tanti
+          </span>
+        </div>
+
+        <button type="button" onclick="toggleTvMode(true)" class="sm:hidden text-xs font-semibold text-slate-600 underline">
+          🖥️ Mode Layar TV
+        </button>
       </div>
     </section>
 
@@ -153,12 +224,12 @@
 
   </main>
 
-  <!-- 2. BAGIAN KHUSUS EDIT AGENDA & STATUS (MODAL TERPISAH - HANYA PEMBUAT) -->
+  <!-- 4. MODAL EDIT AGENDA, STATUS & CATATAN KENDALA (REMARKS) -->
   <div id="editModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
         <div>
-          <h3 class="text-base font-bold text-slate-900">Edit Agenda & Status</h3>
+          <h3 class="text-base font-bold text-slate-900">Edit Agenda, Status & Catatan</h3>
           <p class="text-xs text-slate-500" id="editUnitLabel">Unit Pembuat: -</p>
         </div>
         <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
@@ -167,13 +238,22 @@
       <form id="editAgendaForm" class="space-y-4">
         <input type="hidden" id="editDocId" />
 
-        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">Update Status Agenda</label>
-          <select id="editStatus" class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-slate-500">
-            <option value="On Progress">🔄 On Progress</option>
-            <option value="Pending">⏳ Pending</option>
-            <option value="Selesai">✓ Selesai</option>
-          </select>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Update Status Agenda</label>
+            <select id="editStatus" class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-slate-500">
+              <option value="On Progress">🔄 On Progress</option>
+              <option value="Pending">⏳ Pending</option>
+              <option value="Selesai">✓ Selesai</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              Catatan / Kendala <span class="font-normal text-slate-400">(Opsional — misal alasan Pending / hasil)</span>
+            </label>
+            <input type="text" id="editCatatan" placeholder="Contoh: Menunggu ACC desain / Reschedule besok" class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500" />
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -184,22 +264,19 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Waktu / Jam</label>
             <select id="editWaktu" required class="w-full border border-slate-300 bg-white rounded-lg px-3 py-2 text-sm">
-              <!-- Diisi otomatis via JavaScript -->
             </select>
           </div>
         </div>
 
-        <!-- EDIT IRISAN UNIT LAIN -->
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1.5">Irisan / Kolaborasi Unit Lain</label>
           <div id="editIrisanContainer" class="flex flex-wrap gap-2.5 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-            <!-- Diisi otomatis -->
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Deskripsi Kegiatan / Agenda</label>
-          <textarea id="editKegiatan" rows="3" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></textarea>
+          <textarea id="editKegiatan" rows="2" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></textarea>
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2">
@@ -291,22 +368,26 @@
       "R&D": {
         card: "border-l-4 border-l-emerald-500 bg-white",
         badge: "bg-emerald-100 text-emerald-800 border-emerald-300",
-        dot: "bg-emerald-500"
+        dot: "bg-emerald-500",
+        emoji: "🟢"
       },
       "KTC": {
         card: "border-l-4 border-l-blue-500 bg-white",
         badge: "bg-blue-100 text-blue-800 border-blue-300",
-        dot: "bg-blue-500"
+        dot: "bg-blue-500",
+        emoji: "🔵"
       },
       "SCD": {
         card: "border-l-4 border-l-amber-400 bg-white",
         badge: "bg-amber-100 text-amber-800 border-amber-300",
-        dot: "bg-amber-500"
+        dot: "bg-amber-500",
+        emoji: "🟡"
       },
       "Jadwal Bu Tanti": {
         card: "border-l-4 border-l-rose-500 bg-white",
         badge: "bg-rose-100 text-rose-800 border-rose-300",
-        dot: "bg-rose-500"
+        dot: "bg-rose-500",
+        emoji: "🔴"
       }
     };
 
@@ -315,13 +396,14 @@
 
     let activeSession = JSON.parse(localStorage.getItem("agenda_session")) || null;
     let allAgendas = [];
+    let currentFilteredAgendas = [];
     let isAllDatesMode = false;
+    let isTvMode = false;
 
     const todayStr = new Date().toLocaleDateString('en-CA');
     document.getElementById('filterTanggal').value = todayStr;
     document.getElementById('createTanggal').value = todayStr;
 
-    // Format Tanggal Indonesia agar mudah dibaca (contoh: Rab, 25 Nov 2026)
     function formatTanggalIndo(dateStr) {
       if (!dateStr) return "-";
       const [y, m, d] = dateStr.split('-').map(Number);
@@ -334,7 +416,123 @@
       });
     }
 
-    // Toggle Mode Semua Tanggal
+    // MODE LAYAR TV KANTOR
+    window.toggleTvMode = (enable) => {
+      isTvMode = enable;
+      document.getElementById('mainNavbar').classList.toggle('hidden', enable);
+      document.getElementById('tvHeader').classList.toggle('hidden', !enable);
+      document.getElementById('filterSection').classList.toggle('hidden', enable);
+      document.getElementById('inputSection').classList.toggle('hidden', enable || !activeSession);
+
+      const mainContainer = document.getElementById('mainContainer');
+      const agendaList = document.getElementById('agendaList');
+
+      if (enable) {
+        mainContainer.classList.remove('max-w-6xl');
+        mainContainer.classList.add('max-w-7xl');
+        agendaList.classList.remove('md:grid-cols-2');
+        agendaList.classList.add('md:grid-cols-2', 'lg:grid-cols-3');
+        document.getElementById('tvDateSubtitle').textContent = formatTanggalIndo(document.getElementById('filterTanggal').value || todayStr);
+        updateTvClock();
+      } else {
+        mainContainer.classList.add('max-w-6xl');
+        mainContainer.classList.remove('max-w-7xl');
+        agendaList.classList.remove('lg:grid-cols-3');
+      }
+      renderAgendas();
+    };
+
+    function updateTvClock() {
+      if (!isTvMode) return;
+      const now = new Date();
+      document.getElementById('tvClock').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+    }
+    setInterval(updateTvClock, 1000);
+
+    // COPY REKAP WHATSAPP
+    window.copyWhatsAppRecap = async () => {
+      if (currentFilteredAgendas.length === 0) {
+        alert("Tidak ada agenda untuk disalin pada filter saat ini.");
+        return;
+      }
+
+      const fTanggal = isAllDatesMode ? "Semua Tanggal" : formatTanggalIndo(document.getElementById('filterTanggal').value || todayStr);
+      const fUnit = document.getElementById('filterUnit').value;
+      const headerUnit = fUnit === "ALL" ? "Semua Unit" : fUnit;
+
+      let lines = [
+        `*AGENDA KERJA HARIAN - KREASI CENTER*`,
+        `📅 *${fTanggal}* (${headerUnit})`,
+        `────────────────────`
+      ];
+
+      currentFilteredAgendas.forEach((item, index) => {
+        const uEmoji = UNIT_STYLES[item.unit]?.emoji || "⚪";
+        const effStatus = getEffectiveStatus(item);
+        const statusIcon = effStatus === "Selesai" ? "✅" : (effStatus === "Pending" ? "⏳" : "🔄");
+        const irisanText = Array.isArray(item.irisan) && item.irisan.length > 0 ? ` (+ ${item.irisan.join(", ")})` : "";
+        const datePrefix = isAllDatesMode ? `[${formatTanggalIndo(item.tanggal)}] ` : "";
+
+        lines.push(`${index + 1}. ${uEmoji} *[${item.unit}${irisanText}]* ${datePrefix}${item.waktu}`);
+        lines.push(`   • ${item.kegiatan} — ${statusIcon} _${effStatus}_`);
+        if (item.catatan) {
+          lines.push(`   • _Catatan: ${item.catatan}_`);
+        }
+      });
+
+      lines.push(`────────────────────`);
+      lines.push(`Total: ${currentFilteredAgendas.length} Agenda`);
+
+      const textToCopy = lines.join("\n");
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        const btn = document.getElementById('btnCopyWA');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "✅ Tersalin! Siap Paste ke WA";
+        setTimeout(() => { btn.innerHTML = originalText; }, 2500);
+      } catch (err) {
+        alert("Gagal menyalin teks otomatis. Silakan coba lagi.");
+      }
+    };
+
+    // EXPORT KE SPREADSHEET (.CSV)
+    window.exportToSpreadsheet = () => {
+      if (currentFilteredAgendas.length === 0) {
+        alert("Tidak ada data agenda untuk di-export pada filter saat ini.");
+        return;
+      }
+
+      const headers = ["No", "Tanggal", "Waktu / Jam", "Unit Pembuat", "Irisan Unit Lain", "Deskripsi Kegiatan", "Status", "Catatan / Kendala"];
+      const rows = currentFilteredAgendas.map((item, idx) => {
+        const irisanStr = Array.isArray(item.irisan) && item.irisan.length > 0 ? item.irisan.join(", ") : "-";
+        const statusStr = getEffectiveStatus(item);
+        const catatanStr = item.catatan || "-";
+        return [
+          idx + 1,
+          item.tanggal,
+          item.waktu,
+          item.unit,
+          irisanStr,
+          item.kegiatan,
+          statusStr,
+          catatanStr
+        ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(",");
+      });
+
+      const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const fTanggal = isAllDatesMode ? "Semua-Tanggal" : (document.getElementById('filterTanggal').value || todayStr);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Agenda-Kreasi-Center_${fTanggal}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+
     window.toggleSemuaTanggal = () => {
       isAllDatesMode = !isAllDatesMode;
       const filterInput = document.getElementById('filterTanggal');
@@ -368,7 +566,6 @@
       renderAgendas();
     };
 
-    // Jika user memilih tanggal manual di input date, matikan mode "Semua Tanggal"
     document.getElementById('filterTanggal').addEventListener('change', (e) => {
       const btnSemua = document.getElementById('btnSemuaTanggal');
       const summaryBar = document.getElementById('filterSummaryBar');
@@ -386,11 +583,8 @@
       renderAgendas();
     });
 
-    // Jika user memilih status "Pending" dan belum aktif Semua Tanggal, tawarkan atau tampilkan info
     document.getElementById('filterStatus').addEventListener('change', (e) => {
       if (e.target.value === "Pending" && !isAllDatesMode) {
-        // Otomatis pindah ke Semua Tanggal saat memilih filter status Pending
-        // agar semua agenda Pending lintas tanggal langsung kelihatan
         toggleSemuaTanggal();
       } else {
         renderAgendas();
@@ -449,6 +643,7 @@
       document.getElementById('editDocId').value = item.id;
       document.getElementById('editUnitLabel').textContent = `Unit Pembuat: ${item.unit}`;
       document.getElementById('editStatus').value = getEffectiveStatus(item);
+      document.getElementById('editCatatan').value = item.catatan || "";
       document.getElementById('editTanggal').value = item.tanggal;
       
       const editWaktuEl = document.getElementById('editWaktu');
@@ -482,13 +677,13 @@
       if (activeSession) {
         btnOpenLogin.classList.add('hidden');
         btnLogout.classList.remove('hidden');
-        inputSection.classList.remove('hidden');
+        if (!isTvMode) inputSection.classList.remove('hidden');
 
         userBadge.classList.remove('hidden');
         userBadge.textContent = `Unit: ${activeSession.unit}`;
         userBadge.className = `text-xs font-semibold px-3 py-1.5 rounded-full border ${UNIT_STYLES[activeSession.unit]?.badge || 'bg-slate-100'}`;
 
-        modeSubtitle.textContent = `Login sebagai: ${activeSession.username.toUpperCase()}`;
+        modeSubtitle.textContent = `Kreasi Center • Login: ${activeSession.username.toUpperCase()}`;
         createUnit.value = activeSession.unit;
         createUnitDisplay.value = activeSession.label || activeSession.unit;
 
@@ -498,7 +693,7 @@
         btnLogout.classList.add('hidden');
         inputSection.classList.add('hidden');
         userBadge.classList.add('hidden');
-        modeSubtitle.textContent = "Dashboard Publik (Hanya Lihat)";
+        modeSubtitle.textContent = "Kreasi Center";
       }
       renderAgendas();
     }
@@ -533,23 +728,44 @@
       updateAuthUI();
     };
 
+    // CEK BENTROK JADWAL (CONFLICT ALERT) & SIMPAN AGENDA BARU
     document.getElementById('createAgendaForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!activeSession) return;
+
+      const tanggalInput = document.getElementById('createTanggal').value;
+      const waktuInput = document.getElementById('createWaktu').value;
+      const irisanSelected = getSelectedIrisan('createIrisanContainer');
+      const involvedUnits = [activeSession.unit, ...irisanSelected];
+
+      // Cek apakah ada jadwal lain di tanggal & jam yang sama untuk unit pembuat atau unit irisan
+      const conflicts = allAgendas.filter(existing => {
+        if (existing.tanggal !== tanggalInput || existing.waktu !== waktuInput) return false;
+        const existingInvolved = [existing.unit, ...(Array.isArray(existing.irisan) ? existing.irisan : [])];
+        return involvedUnits.some(u => existingInvolved.includes(u));
+      });
+
+      if (conflicts.length > 0) {
+        const conflictDetails = conflicts.map(c => `- [${c.unit}] ${c.kegiatan} (${c.waktu})`).join("\n");
+        const proceed = confirm(
+          `⚠️ PERINGATAN BENTROK JADWAL!\n\nPada tanggal ${formatTanggalIndo(tanggalInput)} jam ${waktuInput}, ditemukan jadwal yang bersinggungan:\n${conflictDetails}\n\nTetap simpan agenda ini?`
+        );
+        if (!proceed) return;
+      }
 
       const btn = document.getElementById('btnCreateSubmit');
       btn.disabled = true;
       btn.textContent = "Menyimpan...";
 
       try {
-        const irisanSelected = getSelectedIrisan('createIrisanContainer');
         await addDoc(collection(db, "agendas"), {
-          tanggal: document.getElementById('createTanggal').value,
-          waktu: document.getElementById('createWaktu').value,
+          tanggal: tanggalInput,
+          waktu: waktuInput,
           unit: activeSession.unit,
           irisan: irisanSelected,
           kegiatan: document.getElementById('createKegiatan').value.trim(),
           status: "On Progress",
+          catatan: "",
           createdBy: activeSession.username,
           createdAt: new Date().toISOString()
         });
@@ -564,6 +780,7 @@
       }
     });
 
+    // SIMPAN EDIT AGENDA, STATUS & CATATAN
     document.getElementById('editAgendaForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!activeSession) return;
@@ -580,6 +797,7 @@
         const irisanSelected = getSelectedIrisan('editIrisanContainer');
         await updateDoc(doc(db, "agendas", docId), {
           status: document.getElementById('editStatus').value,
+          catatan: document.getElementById('editCatatan').value.trim(),
           tanggal: document.getElementById('editTanggal').value,
           waktu: document.getElementById('editWaktu').value,
           irisan: irisanSelected,
@@ -638,16 +856,34 @@
       const fUnit = document.getElementById('filterUnit').value;
       const fStatus = document.getElementById('filterStatus').value;
 
-      let filtered = allAgendas.filter(item => {
-        const effectiveStatus = getEffectiveStatus(item);
+      // Filter berdasarkan tanggal & unit dulu untuk menghitung statistik counter
+      const baseFiltered = allAgendas.filter(item => {
         const matchTanggal = !fTanggal || item.tanggal === fTanggal;
         const irisanList = Array.isArray(item.irisan) ? item.irisan : [];
         const matchUnit = fUnit === "ALL" || item.unit === fUnit || irisanList.includes(fUnit);
-        const matchStatus = fStatus === "ALL" || effectiveStatus === fStatus;
-        return matchTanggal && matchUnit && matchStatus;
+        return matchTanggal && matchUnit;
       });
 
-      // Jika mode Semua Tanggal aktif, urutkan tanggal terbaru ke terlama lalu berdasarkan jam
+      // Update Mini Counter Statistik
+      let countProgress = 0, countPending = 0, countSelesai = 0;
+      baseFiltered.forEach(item => {
+        const eff = getEffectiveStatus(item);
+        if (eff === "Selesai") countSelesai++;
+        else if (eff === "Pending") countPending++;
+        else countProgress++;
+      });
+
+      document.getElementById('statTotal').textContent = baseFiltered.length;
+      document.getElementById('statProgress').textContent = countProgress;
+      document.getElementById('statPending').textContent = countPending;
+      document.getElementById('statSelesai').textContent = countSelesai;
+
+      // Filter akhir termasuk status
+      let filtered = baseFiltered.filter(item => {
+        const effectiveStatus = getEffectiveStatus(item);
+        return fStatus === "ALL" || effectiveStatus === fStatus;
+      });
+
       if (isAllDatesMode) {
         filtered.sort((a, b) => {
           if (a.tanggal !== b.tanggal) return b.tanggal.localeCompare(a.tanggal);
@@ -656,6 +892,8 @@
         document.getElementById('filterSummaryText').textContent =
           `Menampilkan ${filtered.length} agenda dari semua tanggal` + (fStatus !== "ALL" ? ` (Status: ${fStatus})` : '');
       }
+
+      currentFilteredAgendas = filtered;
 
       if (filtered.length === 0) {
         container.innerHTML = `
@@ -672,7 +910,7 @@
         const isPending = effectiveStatus === "Pending";
         const irisanList = Array.isArray(item.irisan) ? item.irisan : [];
         
-        const isCreator = activeSession && item.unit === activeSession.unit;
+        const isCreator = !isTvMode && activeSession && item.unit === activeSession.unit;
 
         const irisanBadges = irisanList.length > 0
           ? irisanList.map(u => {
@@ -690,6 +928,12 @@
           statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200 shrink-0">🔄 On Progress</span>`;
         }
 
+        const catatanHTML = item.catatan ? `
+          <div class="mt-2 bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-600">
+            <span class="font-semibold text-slate-700">📝 Catatan:</span> ${escapeHTML(item.catatan)}
+          </div>
+        ` : '';
+
         const actionButtons = isCreator ? `
           <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
             <button onclick="quickMarkSelesai('${item.id}', '${effectiveStatus}')" class="text-xs font-medium px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
@@ -700,7 +944,7 @@
               <button onclick="deleteAgenda('${item.id}')" class="text-xs font-medium text-rose-600 hover:underline">Hapus</button>
             </div>
           </div>
-        ` : (activeSession && irisanList.includes(activeSession.unit) ? `
+        ` : (!isTvMode && activeSession && irisanList.includes(activeSession.unit) ? `
           <div class="mt-3 pt-2.5 border-t border-slate-100">
             <p class="text-[11px] text-slate-400 italic">🤝 Agenda irisan dari <strong class="text-slate-600">${item.unit}</strong> (Hanya pembuat yang dapat mengedit)</p>
           </div>
@@ -722,6 +966,7 @@
               <p class="text-sm sm:text-base font-medium text-slate-800 ${isSelesai ? 'line-through text-slate-400' : ''}">
                 ${escapeHTML(item.kegiatan)}
               </p>
+              ${catatanHTML}
             </div>
             ${actionButtons}
           </div>

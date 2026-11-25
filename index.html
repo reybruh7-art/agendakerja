@@ -190,6 +190,7 @@
               <option value="R&D">R&D (Hijau)</option>
               <option value="KTC">KTC (Biru)</option>
               <option value="SCD">SCD (Kuning)</option>
+              <option value="KEU">KEU (Ungu)</option>
               <option value="Jadwal Bu Tanti">Bu Tanti (Merah)</option>
             </select>
           </div>
@@ -227,6 +228,9 @@
             </span>
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-100 text-amber-800">
               <span class="w-2 h-2 rounded-full bg-amber-500"></span> SCD
+            </span>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-100 text-purple-800">
+              <span class="w-2 h-2 rounded-full bg-purple-600"></span> KEU
             </span>
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-100 text-rose-800">
               <span class="w-2 h-2 rounded-full bg-rose-600"></span> Bu Tanti
@@ -344,7 +348,7 @@
       <form id="loginForm" class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Username</label>
-          <input type="text" id="loginUsername" placeholder="Masukkan username (rnd / ktc / scd / butanti)" autocapitalize="none" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+          <input type="text" id="loginUsername" placeholder="rnd / ktc / scd / keu / butanti" autocapitalize="none" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" />
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Password</label>
@@ -377,10 +381,11 @@
       "rnd":     { pass: "rndkreasi",     unit: "R&D",             label: "R&D (Hijau)" },
       "ktc":     { pass: "ktckreasi",     unit: "KTC",             label: "KTC (Biru)" },
       "scd":     { pass: "scdkreasi",     unit: "SCD",             label: "SCD (Kuning)" },
+      "keu":     { pass: "keukreasi",     unit: "KEU",             label: "KEU (Ungu)" },
       "butanti": { pass: "butantikreasi", unit: "Jadwal Bu Tanti", label: "Jadwal Bu Tanti (Merah)" }
     };
 
-    const ALL_UNITS = ["R&D", "KTC", "SCD", "Jadwal Bu Tanti"];
+    const ALL_UNITS = ["R&D", "KTC", "SCD", "KEU", "Jadwal Bu Tanti"];
 
     const TIME_SLOTS = [
       "07:00 - 08:00",
@@ -425,6 +430,12 @@
         badge: "bg-amber-100 text-amber-800 border-amber-300",
         dot: "bg-amber-500",
         emoji: "🟡"
+      },
+      "KEU": {
+        card: "border-l-4 border-l-purple-500",
+        badge: "bg-purple-100 text-purple-800 border-purple-300",
+        dot: "bg-purple-500",
+        emoji: "🟣"
       },
       "Jadwal Bu Tanti": {
         card: "border-l-4 border-l-rose-500",
@@ -895,7 +906,6 @@
       const fUnit = document.getElementById('filterUnit').value;
       const fStatus = document.getElementById('filterStatus').value;
 
-      // Update label tanggal aktif di bagian ringkasan
       const activeDateLabel = document.getElementById('activeDateLabel');
       if (isAllDatesMode) {
         activeDateLabel.textContent = "Semua Tanggal";
